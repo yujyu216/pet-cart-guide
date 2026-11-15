@@ -45,6 +45,7 @@ h1{font-size:20px; margin:0 0 4px}
 .badge.load{background:var(--yellow)}
 .badge.w{background:#E4EDDA}
 .badge.new{background:#E4572E; color:#fff}
+.badge.disc{background:#B3402E; color:#fff}
 .point{font-size:13.5px; line-height:1.55; margin:8px 0 0; color:#554E40}
 .tags{display:flex; flex-wrap:wrap; gap:5px; margin-top:8px}
 .tag{font-size:11.5px; font-weight:700; background:var(--chip); border-radius:999px; padding:3px 9px; color:#6B6350}
@@ -111,6 +112,7 @@ table.spec th{width:34%; color:var(--sub); font-weight:700}
 <button class="chip" data-v="ロング">ロング（胴長・大きめ）</button>
 <button class="chip" data-v="EG">EG（エッグショック）</button>
 <button class="chip" data-v="キャリー単体">キャリー単体OK</button>
+<button class="chip" data-v="旧モデル">⚠️ 旧モデル（生産終了）</button>
 </div>
 </div>
 <div class="fgroup">
@@ -200,19 +202,19 @@ const IMG = {"agile2": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDA
 
 const PRODUCTS = [
 /* ===== compet（コムペット） ===== */
-{id:"waiwai", brand:"compet", name:"ワイワイコンパクト", price:20000, priceIn:22000, load:12, type:"一体型",
+{id:"waiwai", disc:true, brand:"compet", name:"ワイワイコンパクト", price:20000, priceIn:22000, load:12, type:"一体型",
  weight:null, point:"ワンアクションでさっと開閉。コムペット史上最小の折りたたみサイズで、収納にも持ち運びにも便利。",
  tags:["コンパクト"], spec:{}, sales:"とにかく小さくたためるのが強み。収納スペースが限られる方、持ち運び重視の方に。"},
-{id:"rico", brand:"compet", name:"リココンパクト", price:23000, priceIn:25300, load:12, type:"一体型",
+{id:"rico", disc:true, brand:"compet", name:"リココンパクト", price:23000, priceIn:25300, load:12, type:"一体型",
  weight:null, point:"手提げでラクラク持ち運びできる、超コンパクトモデル。収納にも便利。",
  tags:["コンパクト"], spec:{}, sales:"手提げで持てる手軽さが魅力。コンパクトさと価格のバランスで提案しやすい1台。"},
-{id:"mililite", brand:"compet", name:"ミリミリライト アルファ", price:36000, priceIn:39600, load:12, type:"一体型",
+{id:"mililite", disc:true, brand:"compet", name:"ミリミリライト アルファ", price:36000, priceIn:39600, load:12, type:"一体型",
  weight:null, point:"大人気の軽量シリーズ。落ち着いたカラーラインナップでリニューアル。",
  tags:["軽量"], spec:{}, sales:"軽さ重視の小型ペット向け。ミリミリシリーズの入門としても案内しやすい。"},
-{id:"mililite-eglong", brand:"compet", name:"ミリミリライト アルファ EG ロング", price:38000, priceIn:41800, load:12, type:"一体型",
+{id:"mililite-eglong", disc:true, brand:"compet", name:"ミリミリライト アルファ EG ロング", price:38000, priceIn:41800, load:12, type:"一体型",
  weight:null, point:"軽くてキャリーが長い人気モデル。エッグショック搭載で振動をやわらげ、折りたたんで持ち運べる軽さ。",
  tags:["軽量","ロング","EG"], spec:{}, sales:"胴長犬種や大きめの小型ペットに。EG（エッグショック）で乗り心地もアピールできる。"},
-{id:"mililite-eglongd", brand:"compet", name:"ミリミリライト アルファ EG ロングD", price:42000, priceIn:46200, load:12, type:"一体型",
+{id:"mililite-eglongd", disc:true, brand:"compet", name:"ミリミリライト アルファ EG ロングD", price:42000, priceIn:46200, load:12, type:"一体型",
  weight:null, point:"EGロングにタイヤ着脱可能なタイプが仲間入り。メンテナンスしやすい。",
  tags:["軽量","ロング","EG","タイヤ着脱可"], spec:{}, sales:"EGロングの特徴そのままに、タイヤが外せてお手入れ簡単。長く使う方に。"},
 {id:"mililite-10th", brand:"compet", name:"ミリミリライト アルファ 10th アニバーサリーモデル", price:39000, priceIn:42900, load:12, type:"一体型",
@@ -231,10 +233,10 @@ const PRODUCTS = [
  tags:["軽量"],
  spec:{"カラー":"ワイオネグリーン / マーメイドケープブルー / クォーターエッジグレージュ / サンセットレッド","使用時サイズ":"W51.5×D75×H105cm","折畳時サイズ":"W39×D22.5×H105cm","キャリー内寸":"W27×D50×H25cm","耐荷重":"15kg（2匹まで対応・荷物カゴ5kg）"},
  sales:"片手で折りたたみが完結する「マジカルフォールディング」を搭載し、畳んでも自立するので玄関でも場所を取らない。ファスナー式の幌と3箇所のメッシュ窓で通気性抜群。キャリーカバーは丸洗い可能で、いつでも清潔に保てる。"},
-{id:"milimili-eglong", brand:"compet", name:"ミリミリ EG ロング", price:48000, priceIn:52800, load:15, type:"キャリー型",
+{id:"milimili-eglong", disc:true, brand:"compet", name:"ミリミリ EG ロング", price:48000, priceIn:52800, load:15, type:"キャリー型",
  weight:null, point:"キャリーが長いロングタイプ。大きめワンちゃん、胴長犬種、2匹一緒のおでかけもゆったり快適。キャリー単体使用OK。",
  tags:["ロング","EG","キャリー単体"], spec:{}, sales:"大きめ・胴長の子や2匹乗りに。EG搭載で振動をやわらげ、キャリーだけでも使える。"},
-{id:"milimili-eglongd", brand:"compet", name:"ミリミリ EG ロングD", price:50000, priceIn:55000, load:15, type:"キャリー型",
+{id:"milimili-eglongd", disc:true, brand:"compet", name:"ミリミリ EG ロングD", price:50000, priceIn:55000, load:15, type:"キャリー型",
  weight:null, point:"EGロングのタイヤ着脱可能タイプ。メンテナンス性アップ。キャリー単体使用OK。",
  tags:["ロング","EG","キャリー単体","タイヤ着脱可"], spec:{}, sales:"タイヤが外せてお手入れ簡単。ロングタイプでゆったり、長く使いたい方に。"},
 {id:"milimili-carry", brand:"compet", name:"ミリミリ キャリー", price:54000, priceIn:59400, load:15, type:"キャリー型",
@@ -448,6 +450,7 @@ if(state.type && p.type!== state.type) return false;
 if(state.brand && p.brand!== state.brand) return false;
 if(state.tag){
 if(state.tag === "軽量"){ if(!(p.weight!== null && p.weight <= 5) &&!p.tags.includes("軽量")) return false;}
+else if(state.tag === "旧モデル"){ if(!p.disc) return false; }
 else if(!p.tags.includes(state.tag)) return false;
 }
 return true;
@@ -491,6 +494,7 @@ ${imgTag(p.id,"thumb")}
 <span class="badge load">耐荷重 〜${p.load}kg</span>
 <span class="badge">${p.type}</span>
 ${p.weight!==null?`<span class="badge w">本体 ${p.weight}kg</span>`:""}
+${p.disc?'<span class="badge disc">⚠️ 旧モデル（生産終了）</span>':""}
 </div>
 <p class="point">${p.point}</p>
 <div class="tags">${p.tags.map(t=>`<span class="tag">${t}</span>`).join("")}</div>
@@ -550,7 +554,9 @@ ${imgTag(p.id,"dimg")}
 <span class="badge load">耐荷重 〜${p.load}kg</span>
 <span class="badge">${p.type}</span>
 ${p.weight!==null?`<span class="badge w">本体 ${p.weight}kg</span>`:""}
+${p.disc?'<span class="badge disc">⚠️ 旧モデル（生産終了）</span>':""}
 </div>
+${p.disc?`<div class="dsec"><h3>⚠️ 注意</h3><p>研修資料の「生産終了・旧モデル一覧」に掲載されたモデルです。同名の現行モデル（リニューアル版）が販売中の場合があるため、取扱い・在庫は店頭で確認してください。</p></div>`:""}
 <div class="dsec"><h3>特徴</h3><p>${p.point}</p></div>
 ${specRows?`<div class="dsec"><h3>スペック</h3><table class="spec">${specRows}</table></div>`:""}
 <div class="dsec"><h3>⭐ 接客ポイント</h3><div class="sales">${p.sales}</div></div>
