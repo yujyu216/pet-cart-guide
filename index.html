@@ -74,6 +74,22 @@ table.spec th{width:34%; color:var(--sub); font-weight:700}
 .memodate{font-size:11.5px; font-weight:700; color:var(--sub); margin-bottom:4px}
 .memotext{font-size:14.5px; line-height:1.65; margin:0; white-space:pre-wrap; word-break:break-word; color:#554E40}
 .delbtn{margin-top:10px; padding:7px 14px; font-size:13px; font-weight:900; border:2px solid #D8A08E; border-radius:999px; background:#FBEEE9; color:#A4442A; cursor:pointer}
+.cmpbtn{margin-top:9px; padding:8px 14px; font-size:13.5px; font-weight:900; border:2px solid var(--green); border-radius:999px; background:#fff; color:var(--green-dk); cursor:pointer}
+.cmpbtn.on{background:var(--green); color:#fff}
+table.cmptable{width:100%; border-collapse:collapse; font-size:13.5px; background:var(--card); border:2px solid var(--line); border-radius:14px; overflow:hidden}
+table.cmptable th, table.cmptable td{border-bottom:1px solid var(--line); border-right:1px solid var(--line); padding:8px; text-align:left; vertical-align:top; line-height:1.55}
+table.cmptable th{width:64px; color:var(--sub); font-size:12px; background:#FBF7EA}
+table.cmptable td:last-child, table.cmptable th:last-child{border-right:none}
+.cmpthumb{width:64px; height:64px; object-fit:cover; border-radius:10px; border:1px solid var(--line); background:#fff; display:block; margin-bottom:5px}
+.tgroup{font-size:15px; font-weight:900; margin:14px 0 4px; color:var(--green-dk)}
+.ttype{font-size:13px; font-weight:900; margin:10px 0 5px; color:var(--sub)}
+.titem{display:flex; gap:10px; align-items:center; background:var(--card); border:2px solid var(--line); border-radius:12px; padding:8px 10px; margin-bottom:6px; cursor:pointer}
+.tthumb{width:52px; height:52px; object-fit:cover; border-radius:9px; border:1px solid var(--line); background:#fff; flex-shrink:0}
+.tname{font-size:14.5px; font-weight:900}
+.tnote{font-size:12px; color:#6B6350; line-height:1.5}
+.tprice{font-size:13px; font-weight:900; color:var(--green-dk); white-space:nowrap}
+.sumrow{display:flex; gap:10px; align-items:flex-start; background:var(--card); border:2px solid var(--line); border-radius:12px; padding:10px; margin-bottom:6px; cursor:pointer}
+.sumshort{font-size:13px; line-height:1.55; color:#554E40; margin-top:3px}
 </style>
 </head>
 <body>
@@ -85,6 +101,7 @@ table.spec th{width:34%; color:var(--sub); font-weight:700}
 <button class="tab on" data-cat="cart">🛒 カート</button>
 <button class="tab" data-cat="opt">🧩 オプション</button>
 <button class="tab" data-cat="toy">🦴 おもちゃ</button>
+<button class="tab" data-cat="cmp">📊 比較</button>
 <button class="tab" data-cat="memo">📝 メモ</button>
 </div>
 </header>
@@ -210,6 +227,25 @@ table.spec th{width:34%; color:var(--sub); font-weight:700}
 </div>
 <p class="count" id="memo-count"></p>
 <div class="list" id="memo-list"></div>
+</div>
+
+<div id="cmp-page" style="display:none">
+<div class="filters">
+<div class="fgroup">
+<p class="flabel">📊 くらべる（カート最大3つまで）</p>
+<p style="font-size:13px; color:var(--sub); margin:0 0 6px; line-height:1.6">カートのカードや下の「ひとことまとめ」で「＋ くらべる」を押すと、ここに比較表が出ます。</p>
+<div id="cmp-area"></div>
+</div>
+<div class="fgroup">
+<p class="flabel">🌳 ラインナップ図（研修資料・機能別）</p>
+<div id="tree-area"></div>
+<p style="font-size:11.5px; color:var(--sub); line-height:1.6">資料のラインナップ図をもとに作成。図の価格は本体価格（税抜）です。タップで詳細が見られます。</p>
+</div>
+<div class="fgroup">
+<p class="flabel">⚡ ひとことまとめ（全カート）</p>
+<div id="sum-area"></div>
+</div>
+</div>
 </div>
 
 <footer>
@@ -445,9 +481,10 @@ $("filters-cart").style.display = state.cat==="cart"? "": "none";
 $("filters-opt").style.display = state.cat==="opt"? "": "none";
 $("filters-toy").style.display = state.cat==="toy"? "": "none";
 $("memo-page").style.display = state.cat==="memo"? "": "none";
-$("count").style.display = state.cat==="memo"? "none": "";
-$("list").style.display = state.cat==="memo"? "none": "";
-if(state.cat==="memo"){ renderMemo(); } else { render(); }
+$("cmp-page").style.display = state.cat==="cmp"? "": "none";
+$("count").style.display = (state.cat==="memo" || state.cat==="cmp")? "none": "";
+$("list").style.display = (state.cat==="memo" || state.cat==="cmp")? "none": "";
+if(state.cat==="memo"){ renderMemo(); } else if(state.cat==="cmp"){ renderCmp(); } else { render(); }
 });
 });
 function chipGroup(id, key, parse){
@@ -502,7 +539,7 @@ const ps = t.sizes.map(s=>s.priceIn);
 return `<span class="price">${yen(Math.min(...ps))}〜<br><small>税込</small></span>`;
 }
 function render(){
-if(state.cat === "memo") return;
+if(state.cat === "memo" || state.cat === "cmp") return;
 if(state.cat === "cart"){
 let items = PRODUCTS.filter(matchesCart);
 if(state.sort === "cheap") items.sort((a,b)=>a.price-b.price);
@@ -526,6 +563,7 @@ ${p.disc?'<span class="badge disc">⚠️ 旧モデル（生産終了）</span>'
 </div>
 <p class="point">${p.point}</p>
 <div class="tags">${p.tags.map(t=>`<span class="tag">${t}</span>`).join("")}</div>
+<button class="cmpbtn ${cmpSel.includes(p.id)?"on":""}" onclick="event.stopPropagation(); toggleCmp('${p.id}')">${cmpSel.includes(p.id)?"✓ 比較中（タップで外す）":"＋ くらべる"}</button>
 </div>
 </div>`).join(""): '<div class="empty">条件に合うカートがありません。<br>条件をゆるめてみてください。</div>';
 } else if(state.cat === "opt"){
@@ -588,6 +626,7 @@ ${p.disc?`<div class="dsec"><h3>⚠️ 注意</h3><p>研修資料の「生産終
 <div class="dsec"><h3>特徴</h3><p>${p.point}</p></div>
 ${specRows?`<div class="dsec"><h3>スペック</h3><table class="spec">${specRows}</table></div>`:""}
 <div class="dsec"><h3>⭐ 接客ポイント</h3><div class="sales">${p.sales}</div></div>
+<button class="cmpbtn ${cmpSel.includes(p.id)?"on":""}" style="width:100%" onclick="toggleCmp('${p.id}'); openCart('${p.id}')">${cmpSel.includes(p.id)?"✓ 比較中（タップで外す）":"＋ くらべる（比較タブで見る）"}</button>
 ${p.brand==="compet"?'<a class="linkbtn" href="https://compet.jp/products/cart/" target="_blank" rel="noopener">コムペット公式の商品一覧を見る →</a>':""}
 <button class="closebtn" onclick="closeDetail()">閉じる</button>`;
 showSheet();
@@ -629,6 +668,118 @@ showSheet();
 function showSheet(){ $("overlay").classList.add("open"); $("sheet").scrollTop = 0;}
 function closeDetail(){ $("overlay").classList.remove("open");}
 $("overlay").addEventListener("click", e=>{ if(e.target === $("overlay")) closeDetail();});
+
+/* ===== 比較（くらべる） ===== */
+const SHORT = {
+waiwai:"史上最小にたためる。収納・持ち運び重視の入門モデル",
+rico:"手提げで持てる超コンパクト。手軽さ重視に",
+mililite:"軽量シリーズの定番。小型ペットの日常使いに",
+"mililite-eglong":"軽い＋ロング＋EG。胴長・大きめの小型ペットに",
+"mililite-eglongd":"EGロング＋タイヤ着脱可。お手入れ簡単",
+"mililite-10th":"10周年限定。クッション付きのお得なセット",
+"mililite-eglong-10th":"EGロングの10周年限定。クッション付き",
+"auto-n":"レバーを握るだけで1秒自動収納＆自立。片手でたためる",
+milimili:"4.3kgの超軽量。マジカルフォールディングで片手収納",
+"milimili-eglong":"ロングキャリー＋EG。キャリー単体でも使える",
+"milimili-eglongd":"EGロング＋タイヤ着脱可。キャリー単体OK",
+"milimili-carry":"キャリー着脱式。車移動・通院が多い方に",
+lulu:"3輪で小回り抜群。中型ペット・多頭向け",
+"lulu-carry":"ルルテイルの着脱キャリー版。車移動もOK",
+"miliclan-light":"ゆったりサイズなのに軽量。多頭・大きめの子に",
+"miliclan-alpha-long":"コムペット最大・耐荷重30kg。中型犬・多頭に",
+lite:"FikaGOの入門モデル。オートクローズ付きで手軽",
+freetogo2:"ボタン1つで1秒自動折りたたみ。通気性も向上",
+flytta:"着脱キャリー＋トートクローズ。車移動が多い方に",
+"flytta-plus":"着脱キャリー＋オートクローズ。キャビン広め",
+agile2:"耐荷重30kg＆最大級キャビン。中型犬・多頭の旗艦",
+toggle:"キャビンを付けても外しても折りたためる",
+king:"耐荷重50kgの車体。QUEENケージと組む大型犬向け",
+queen:"単体でも使える多目的ケージ（S／M）。ドライブ・室内にも",
+kross:"耐荷重100kg。ワゴンにも変身する大型犬向け"
+};
+const TREES = [
+{brand:"コムペット", groups:[
+{label:"中型ペット向け（キャリー内寸 長さ60cm）", types:[
+{label:"一体型", items:[{id:"lulu", note:"3輪スタイル・通気窓3枚・20kgまで"}]},
+{label:"キャリー型（着脱可）", items:[{id:"lulu-carry", note:"3輪スタイル・通気窓3枚・20kgまで"}]}]},
+{label:"小型ペット向け（キャリー内寸 長さ50〜55cm）", types:[
+{label:"一体型", items:[
+{id:"milimili", note:"通気窓3枚・15kgまで・車輪着脱可"},
+{id:"mililite", note:"通気窓3枚・12kgまで"},
+{id:"auto-n", note:"1秒・自動収納・20kgまで"}]},
+{label:"キャリー型（着脱可）", items:[
+{id:"milimili-carry", note:"通気窓3枚・15kgまで・車輪着脱可"},
+{id:"milimili-eglongd", note:"EG搭載・15kgまで・車輪着脱可"}]}]}]},
+{brand:"FikaGO", groups:[
+{label:"", types:[
+{label:"一体型", items:[
+{id:"lite", note:"オートクローズ機能・キャビン内寸 W27×D55×H25cm・20kgまで"},
+{id:"freetogo2", note:"オートクローズ機能・キャビン内寸 W27×D54×H25cm・20kgまで"},
+{id:"agile2", note:"オートクローズ機能・キャビン内寸 W39×D65×H29cm・30kgまで"},
+{id:"toggle", note:"キャビン装着のまま折り畳み可・キャビン内寸 W33×D66×H28cm・30kgまで"},
+{id:"kross", note:"耐荷重100kg・キャビン内寸 W46×D88×H31.5cm・100kgまで"}]},
+{label:"キャリー型（着脱可）", items:[
+{id:"flytta", note:"トートクローズ機能・キャビン内寸 W27×D50×H24cm・20kgまで"},
+{id:"flytta-plus", note:"オートクローズ機能・キャビン内寸 W31×D55×H24cm・20kgまで"}]}]}]}
+];
+let cmpSel = [];
+function toggleCmp(id){
+const i = cmpSel.indexOf(id);
+if(i >= 0){ cmpSel.splice(i, 1); }
+else{
+if(cmpSel.length >= 3){ alert("くらべるのは3つまでです。先に1つ外してください。"); return; }
+cmpSel.push(id);
+}
+if(state.cat === "cmp") renderCmp();
+if(state.cat === "cart") render();
+}
+function renderCmp(){
+const sel = cmpSel.map(id=>PRODUCTS.find(p=>p.id===id)).filter(Boolean);
+if(!sel.length){
+$("cmp-area").innerHTML = '<div class="empty" style="padding:22px">まだ選ばれていません。<br>下の「ひとことまとめ」から「＋ くらべる」を押してください。</div>';
+}else{
+const head = sel.map(p=>`<td>${IMG[p.id]?`<img class="cmpthumb" src="${IMG[p.id]}" alt="">`:""}<b>${p.name}</b><br><button class="cmpbtn on" onclick="toggleCmp('${p.id}')">✓ 外す</button></td>`).join("");
+const row = (label, fn)=>`<tr><th>${label}</th>${sel.map(fn).join("")}</tr>`;
+$("cmp-area").innerHTML = `<table class="cmptable">
+<tr><th></th>${head}</tr>
+${row("価格", p=>`<td><b>${yen(p.priceIn)}</b>（税込）<br>本体 ${yen(p.price)}</td>`)}
+${row("耐荷重", p=>`<td>〜${p.load}kg</td>`)}
+${row("タイプ", p=>`<td>${p.type}</td>`)}
+${row("本体重量", p=>`<td>${p.weight!==null? p.weight+"kg": "—"}</td>`)}
+${row("ひとこと", p=>`<td>${SHORT[p.id] || ""}</td>`)}
+${row("接客ポイント", p=>`<td>${p.sales}</td>`)}
+</table>
+<button class="cmpbtn" style="margin-top:10px" onclick="cmpSel=[]; renderCmp()">比較をクリア</button>`;
+}
+$("tree-area").innerHTML = TREES.map(t=>`
+<div class="tgroup">${t.brand==="FikaGO"?"FikaGO":"コムペット"} ラインナップ</div>
+${t.groups.map(g=>`
+${g.label?`<div class="ttype" style="color:var(--green-dk); font-size:14px">${g.label}</div>`:""}
+${g.types.map(ty=>`
+<div class="ttype">${ty.label}</div>
+${ty.items.map(it=>{ const p = PRODUCTS.find(x=>x.id===it.id); return p? `
+<div class="titem" onclick="openCart('${p.id}')">
+${IMG[p.id]?`<img class="tthumb" src="${IMG[p.id]}" alt="">`:""}
+<div style="flex:1; min-width:0">
+<div class="tname">${p.name}</div>
+<div class="tnote">${it.note}</div>
+</div>
+<span class="tprice">${yen(p.price)}</span>
+</div>`: ""; }).join("")}
+`).join("")}
+`).join("")}
+`).join("");
+$("sum-area").innerHTML = PRODUCTS.map(p=>`
+<div class="sumrow" onclick="openCart('${p.id}')">
+${IMG[p.id]?`<img class="tthumb" src="${IMG[p.id]}" alt="">`:""}
+<div style="flex:1; min-width:0">
+<div class="tname">${p.name} <span style="font-size:12px; color:var(--sub)">${p.brand==="FikaGO"?"FikaGO":"コムペット"}</span></div>
+<div class="sumshort">${SHORT[p.id] || ""}</div>
+<div style="font-size:12.5px; font-weight:900; color:var(--green-dk); margin-top:3px">${yen(p.priceIn)}（税込）・耐荷重〜${p.load}kg${p.disc?" ・⚠️旧モデル":""}</div>
+<button class="cmpbtn ${cmpSel.includes(p.id)?"on":""}" onclick="event.stopPropagation(); toggleCmp('${p.id}')">${cmpSel.includes(p.id)?"✓ 比較中":"＋ くらべる"}</button>
+</div>
+</div>`).join("");
+}
 
 const MEMO_KEY = "petGuideMemo_v1";
 let memos = [];
