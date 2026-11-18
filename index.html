@@ -76,6 +76,11 @@ table.spec th{width:34%; color:var(--sub); font-weight:700}
 .delbtn{margin-top:10px; padding:7px 14px; font-size:13px; font-weight:900; border:2px solid #D8A08E; border-radius:999px; background:#FBEEE9; color:#A4442A; cursor:pointer}
 .cmpbtn{margin-top:9px; padding:8px 14px; font-size:13.5px; font-weight:900; border:2px solid var(--green); border-radius:999px; background:#fff; color:var(--green-dk); cursor:pointer}
 .cmpbtn.on{background:var(--green); color:#fff}
+.edbtnrow{display:flex; gap:8px; margin-top:12px}
+.edbtn{flex:1; padding:11px; font-size:14.5px; font-weight:900; border:2px solid var(--green); border-radius:10px; background:#fff; color:var(--green-dk); cursor:pointer}
+.edbtn.del{border-color:#D8A08E; background:#FBEEE9; color:#A4442A}
+.edlabel{display:block; font-size:12.5px; font-weight:700; color:var(--sub); margin:12px 0 4px}
+.edinput{width:100%; font-size:16px; padding:10px 12px; border:2px solid var(--line); border-radius:10px; background:#fff; outline:none; font-family:inherit}
 table.cmptable{width:100%; border-collapse:collapse; font-size:13.5px; background:var(--card); border:2px solid var(--line); border-radius:14px; overflow:hidden}
 table.cmptable th, table.cmptable td{border-bottom:1px solid var(--line); border-right:1px solid var(--line); padding:8px; text-align:left; vertical-align:top; line-height:1.55}
 table.cmptable th{width:64px; color:var(--sub); font-size:12px; background:#FBF7EA}
@@ -249,6 +254,8 @@ table.cmptable td:last-child, table.cmptable th:last-child{border-right:none}
 </div>
 
 <footer>
+<button class="edbtn" style="width:100%; margin-bottom:8px" onclick="resetOverrides()">🔄 編集・削除をすべてリセット（元に戻す）</button>
+<p style="margin:0 0 8px">商品の編集・削除はこの端末の中に保存されます。</p>
 価格・仕様は2026年11月時点の情報（コムペット公式サイト・研修資料）をもとに作成。最新の価格・在庫は必ず公式情報と店頭で確認してください。<br>
 FikaGO製品の税込価格は税抜価格からの計算値です。商品画像は公式サイト等の公開画像です。
 </footer>
@@ -628,6 +635,7 @@ ${specRows?`<div class="dsec"><h3>スペック</h3><table class="spec">${specRow
 <div class="dsec"><h3>⭐ 接客ポイント</h3><div class="sales">${p.sales}</div></div>
 <button class="cmpbtn ${cmpSel.includes(p.id)?"on":""}" style="width:100%" onclick="toggleCmp('${p.id}'); openCart('${p.id}')">${cmpSel.includes(p.id)?"✓ 比較中（タップで外す）":"＋ くらべる（比較タブで見る）"}</button>
 ${p.brand==="compet"?'<a class="linkbtn" href="https://compet.jp/products/cart/" target="_blank" rel="noopener">コムペット公式の商品一覧を見る →</a>':""}
+<div class="edbtnrow"><button class="edbtn" onclick="openEdit('cart','${p.id}')">✏️ 編集</button><button class="edbtn del" onclick="deleteItem('cart','${p.id}')">🗑 削除</button></div>
 <button class="closebtn" onclick="closeDetail()">閉じる</button>`;
 showSheet();
 }
@@ -644,6 +652,7 @@ ${imgTag(o.id,"dimg")}
 <div class="dsec"><h3>対応製品</h3><p>${o.fit}</p></div>
 <div class="dsec"><h3>⭐ 接客ポイント</h3><div class="sales">${o.sales}</div></div>
 <a class="linkbtn" href="https://compet.jp/products/opt/" target="_blank" rel="noopener">コムペット公式のオプション一覧を見る →</a>
+<div class="edbtnrow"><button class="edbtn" onclick="openEdit('opt','${o.id}')">✏️ 編集</button><button class="edbtn del" onclick="deleteItem('opt','${o.id}')">🗑 削除</button></div>
 <button class="closebtn" onclick="closeDetail()">閉じる</button>`;
 showSheet();
 }
@@ -662,6 +671,7 @@ ${imgTag(t.id,"dimg")}
 <div class="dsec"><h3>特徴</h3><p>${t.point}</p></div>
 <div class="dsec"><h3>サイズ・価格</h3><table class="spec">${rows}</table></div>
 <div class="dsec"><h3>⭐ 接客ポイント</h3><div class="sales">${t.sales}</div></div>
+<div class="edbtnrow"><button class="edbtn" onclick="openEdit('toy','${t.id}')">✏️ 編集</button><button class="edbtn del" onclick="deleteItem('toy','${t.id}')">🗑 削除</button></div>
 <button class="closebtn" onclick="closeDetail()">閉じる</button>`;
 showSheet();
 }
@@ -779,6 +789,90 @@ ${IMG[p.id]?`<img class="tthumb" src="${IMG[p.id]}" alt="">`:""}
 <button class="cmpbtn ${cmpSel.includes(p.id)?"on":""}" onclick="event.stopPropagation(); toggleCmp('${p.id}')">${cmpSel.includes(p.id)?"✓ 比較中":"＋ くらべる"}</button>
 </div>
 </div>`).join("");
+}
+
+/* ===== 編集・削除（端末内に保存） ===== */
+const OVR_KEY = "petGuideOverrides_v1";
+let OVR = {cart:{}, opt:{}, toy:{}, short:{}, del:{cart:[], opt:[], toy:[]}};
+try{ const o = JSON.parse(localStorage.getItem(OVR_KEY) || "null"); if(o){ OVR.cart=o.cart||{}; OVR.opt=o.opt||{}; OVR.toy=o.toy||{}; OVR.short=o.short||{}; OVR.del=o.del||{cart:[],opt:[],toy:[]}; } }catch(e){}
+function saveOVR(){ try{ localStorage.setItem(OVR_KEY, JSON.stringify(OVR)); }catch(e){} }
+function applyOverrides(){
+  for(const id in OVR.cart){ const p = PRODUCTS.find(x=>x.id===id); if(p) Object.assign(p, OVR.cart[id]); }
+  for(const id in OVR.opt){ const p = OPTS.find(x=>x.id===id); if(p) Object.assign(p, OVR.opt[id]); }
+  for(const id in OVR.toy){ const p = TOYS.find(x=>x.id===id); if(p) Object.assign(p, OVR.toy[id]); }
+  for(const id in OVR.short){ SHORT[id] = OVR.short[id]; }
+  const del = (arr, ids)=>{ for(let i=arr.length-1; i>=0; i--){ if(ids.includes(arr[i].id)) arr.splice(i,1); } };
+  del(PRODUCTS, OVR.del.cart); del(OPTS, OVR.del.opt); del(TOYS, OVR.del.toy);
+}
+applyOverrides();
+function refreshView(){ if(state.cat==="cmp") renderCmp(); else if(state.cat!=="memo") render(); }
+function openEdit(kind, id){
+  const arr = kind==="cart"? PRODUCTS: kind==="opt"? OPTS: TOYS;
+  const p = arr.find(x=>x.id===id); if(!p) return;
+  const inp = (key,label,val,type)=>`<label class="edlabel">${label}</label><input class="edinput" id="ed-${key}" type="${type||"text"}" value="${(val===null||val===undefined?"":String(val)).replace(/"/g,"&quot;")}">`;
+  const ta = (key,label,val)=>`<label class="edlabel">${label}</label><textarea class="edinput" id="ed-${key}" rows="3">${val||""}</textarea>`;
+  let fields = inp("name","商品名",p.name);
+  if(kind==="cart"){
+    fields += inp("price","本体価格（円）",p.price,"number")
+      + inp("load","耐荷重（kg）",p.load,"number")
+      + `<label class="edlabel">タイプ</label><select class="edinput" id="ed-type"><option value="一体型" ${p.type==="一体型"?"selected":""}>一体型</option><option value="キャリー型" ${p.type==="キャリー型"?"selected":""}>キャリー型</option></select>`
+      + inp("weight","本体重量（kg・空欄なら非表示）",p.weight,"number")
+      + ta("short","ひとこと（比較タブ用）",SHORT[p.id]||"")
+      + ta("point","特徴",p.point)
+      + ta("sales","接客ポイント",p.sales);
+  } else if(kind==="opt"){
+    fields += inp("priceText","価格（税込・表示文字）",p.priceText)
+      + ta("point","特徴",p.point)
+      + ta("sales","接客ポイント",p.sales);
+  } else {
+    fields += ta("point","特徴",p.point)
+      + ta("sales","接客ポイント",p.sales);
+  }
+  const back = kind==="cart"? `openCart('${id}')`: kind==="opt"? `openOpt('${id}')`: `openToy('${id}')`;
+  $("sheet").innerHTML = `<h2>✏️ 編集：${p.name}</h2>${fields}
+  <button class="savebtn" onclick="saveEdit('${kind}','${id}')">保存する</button>
+  <button class="closebtn" onclick="${back}">もどる</button>`;
+  showSheet();
+}
+function saveEdit(kind, id){
+  const arr = kind==="cart"? PRODUCTS: kind==="opt"? OPTS: TOYS;
+  const p = arr.find(x=>x.id===id); if(!p) return;
+  const v = k=>{ const el = $("ed-"+k); return el? el.value.trim(): ""; };
+  const ov = {};
+  if(v("name")) ov.name = v("name");
+  if(kind==="cart"){
+    const price = parseInt(v("price"),10); if(!isNaN(price)){ ov.price = price; ov.priceIn = Math.round(price*1.1); }
+    const load = parseFloat(v("load")); if(!isNaN(load)) ov.load = load;
+    ov.type = v("type");
+    const w = parseFloat(v("weight")); ov.weight = isNaN(w)? null: w;
+    ov.point = v("point"); ov.sales = v("sales");
+    OVR.short[id] = v("short"); SHORT[id] = v("short");
+    OVR.cart[id] = Object.assign({}, OVR.cart[id], ov);
+  } else if(kind==="opt"){
+    ov.priceText = v("priceText"); ov.point = v("point"); ov.sales = v("sales");
+    const m = ov.priceText.replace(/,/g,"").match(/[0-9]+/); if(m) ov.priceSort = parseInt(m[0],10);
+    OVR.opt[id] = Object.assign({}, OVR.opt[id], ov);
+  } else {
+    ov.point = v("point"); ov.sales = v("sales");
+    OVR.toy[id] = Object.assign({}, OVR.toy[id], ov);
+  }
+  Object.assign(p, ov);
+  saveOVR(); refreshView();
+  if(kind==="cart") openCart(id); else if(kind==="opt") openOpt(id); else openToy(id);
+}
+function deleteItem(kind, id){
+  const arr = kind==="cart"? PRODUCTS: kind==="opt"? OPTS: TOYS;
+  const p = arr.find(x=>x.id===id); if(!p) return;
+  if(!confirm("「"+p.name+"」を削除しますか？\n（ページ下の「編集・削除をリセット」で元に戻せます）")) return;
+  OVR.del[kind].push(id);
+  const i = arr.findIndex(x=>x.id===id); if(i>=0) arr.splice(i,1);
+  if(kind==="cart"){ const ci = cmpSel.indexOf(id); if(ci>=0) cmpSel.splice(ci,1); }
+  saveOVR(); closeDetail(); refreshView();
+}
+function resetOverrides(){
+  if(!confirm("編集・削除をすべて元に戻しますか？")) return;
+  try{ localStorage.removeItem(OVR_KEY); }catch(e){}
+  location.reload();
 }
 
 const MEMO_KEY = "petGuideMemo_v1";
